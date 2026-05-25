@@ -76,9 +76,11 @@ class MultiSelectService
             ->with(['translations' => fn ($q) => $q->where(['key' => $translationKey, 'locale' => $locale])])
             ->get()
             ->mapWithKeys(function (Model $item) {
-                $translation = $item->translations->first();
+                /** @var Collection<int, \Givanov95\LaravelTranslations\Models\Translation> $translations */
+                $translations = $item->getRelation('translations');
+                $translation = $translations->first();
 
-                return $translation ? [$translation->text => $item->id] : [];
+                return $translation ? [$translation->text => $item->getKey()] : [];
             });
     }
 }

@@ -33,8 +33,12 @@ trait HasTranslation
 
     public function setTranslation(string|BackedEnum $locale, string $key, string $text): self
     {
-        $this->stagedTranslations[$key] = [
-            'locale' => $locale instanceof BackedEnum ? (string) $locale->value : $locale,
+        $localeValue = $locale instanceof BackedEnum ? (string) $locale->value : $locale;
+
+        // Index by locale+key so calling setTranslation('en','title')
+        // followed by setTranslation('bg','title') doesn't overwrite.
+        $this->stagedTranslations["{$localeValue}::{$key}"] = [
+            'locale' => $localeValue,
             'key'    => $key,
             'text'   => $text,
         ];

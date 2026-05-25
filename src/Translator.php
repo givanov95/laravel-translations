@@ -78,7 +78,9 @@ class Translator
         }
 
         $mapped = new Collection();
-        foreach ($model->translations as $translation) {
+        /** @var iterable<Models\Translation> $translations */
+        $translations = $model->getRelation('translations');
+        foreach ($translations as $translation) {
             $mapped->put($translation->key, $translation);
         }
 

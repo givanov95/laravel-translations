@@ -7,6 +7,14 @@ namespace Givanov95\LaravelTranslations\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+/**
+ * @property int $id
+ * @property string $locale
+ * @property string $translatable_type
+ * @property int $translatable_id
+ * @property string $key
+ * @property string $text
+ */
 class Translation extends Model
 {
     protected $fillable = [
