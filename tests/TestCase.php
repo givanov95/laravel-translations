@@ -20,12 +20,6 @@ abstract class TestCase extends Orchestra
     protected function defineEnvironment($app): void
     {
         /** @var Application $app */
-        $app['config']->set('database.default', 'sqlite');
-        $app['config']->set('database.connections.sqlite', [
-            'driver'   => 'sqlite',
-            'database' => ':memory:',
-            'prefix'   => '',
-        ]);
         $app['config']->set('app.locale', 'en');
         $app['config']->set('app.fallback_locale', 'en');
     }

@@ -7,8 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking
+- Removed the parts no project used: the `Translation` model, the `HasTranslation` trait,
+  `Translator::mapModelTranslationKeys()` / `mapCollectionTranslationKeys()`, `Services\MultiSelectService`
+  and `Concerns\MultiSelectDataConversion`. What stays is `Translator` (`translations()`,
+  `getAllLocales()`, `clearCache()`), the two middlewares, the config and the Vue plugin.
+- The package no longer loads or publishes a migration, so `php artisan migrate` stops creating a
+  `translations` table (and the `translations-migrations` publish tag is gone). A table that was
+  already created is left alone.
+- The `illuminate/database` requirement is gone with them.
+
+  **Upgrade:** nothing to do if you only use the translator, the middlewares and the plugin. If
+  you did use a removed class, copy it from the `v1.1.1` tag into your project. Drop the old table
+  with a migration of your own if nothing uses it. See "Upgrading from 1.x" in the README.
+
 ### Added
 - CI: PHPUnit and PHPStan on PHP 8.3 and 8.4 for every push to `main` and every pull request.
+
+## [1.1.1] and earlier
+
+### Added
 - Initial extraction from `laravel-starter`.
 - `Translation` polymorphic Eloquent model + migration with unique constraint on `(locale, translatable_type, translatable_id, key)`.
 - `HasTranslation` trait: `setTranslation()` (accepts string or `BackedEnum` locale), `loadTranslations()`, `withTranslations()` / `withTranslationsForLocale()` scopes. Staging is keyed by locale+key so calling `setTranslation('en','title')` followed by `setTranslation('bg','title')` correctly creates two rows.

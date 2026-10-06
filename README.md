@@ -4,13 +4,11 @@ Multi-locale translation infrastructure for Laravel + Inertia + Vue projects.
 
 ## What's included
 
-- `Translation` polymorphic Eloquent model — store any model's translatable text per locale
-- `HasTranslation` trait — `setTranslation()`, `loadTranslations()`, `withTranslations()` scope
-- `Translator` service — cached JSON loader, `getAllLocales()`, model relation key mapping
+- `Translator` service — cached JSON loader (`Translator::translations()`), `getAllLocales()`, `clearCache()`
 - `InitAppLocale` + `InitLocalePrefix` middlewares
-- `MultiSelectService` — load select options from any Eloquent model, with optional translation lookup
-- `MultiSelectDataConversion` trait — turn a PHP enum into select option arrays
 - `TranslationPlugin.ts` — Vue plugin exposing `__('key', { name: 'value' })`
+
+Version 2 is just these three. The model translations (`Translation`, `HasTranslation`) and the select helpers (`MultiSelectService`, `MultiSelectDataConversion`) of version 1 were never used by the projects that use the package and are gone; see [Upgrading from 1.x](#upgrading-from-1x).
 
 The package is **enum-agnostic** — your project keeps its own `Locale` enum and passes either `Locale::en` or the plain `'en'` string. Internally everything works with strings.
 
@@ -18,11 +16,9 @@ The package is **enum-agnostic** — your project keeps its own `Locale` enum an
 
 ```bash
 composer require givanov95/laravel-translations
-php artisan migrate
 php artisan vendor:publish --tag=translations-frontend   # copies TranslationPlugin.ts
 # optional:
 php artisan vendor:publish --tag=translations-config
-php artisan vendor:publish --tag=translations-migrations
 ```
 
 ## Setup
@@ -95,57 +91,6 @@ app.use(TranslationPlugin, translations);
 
 ## Usage
 
-### On models
-
-```php
-use Givanov95\LaravelTranslations\Concerns\HasTranslation;
-
-class Category extends Model
-{
-    use HasTranslation;
-}
-
-// staging + persisting:
-$category->setTranslation('en', 'title', 'Shoes')
-    ->setTranslation('bg', 'title', 'Обувки')
-    ->save();
-
-// eager-loading translations for current locale:
-Category::withTranslations()->get();
-
-// loading + key-indexing for a single model:
-$category->loadTranslations();
-$category->translations['title']->text;
-```
-
-### Select options from a model
-
-```php
-use Givanov95\LaravelTranslations\Services\MultiSelectService;
-
-// untranslated (name column):
-$options = (new MultiSelectService(Category::class))->dataForSelect();
-
-// translated (translation row with key='title' for current locale):
-$options = (new MultiSelectService(Category::class))->dataForSelectWithTranslations('title');
-```
-
-### Enum to options
-
-```php
-use Givanov95\LaravelTranslations\Concerns\MultiSelectDataConversion;
-
-enum Status: string
-{
-    use MultiSelectDataConversion;
-    case Active = 'active';
-    case Draft = 'draft';
-}
-
-Status::forSelect();             // ['active' => 'Active', 'draft' => 'Draft']
-Status::forSelectWithTranslate(); // [{id: 'active', name: __('Active')}, ...]
-```
-
 ### In Vue templates
 
 ```vue
@@ -159,7 +104,7 @@ Status::forSelectWithTranslate(); // [{id: 'active', name: __('Active')}, ...]
 
 ```bash
 composer install
-composer test          # PHPUnit (16 tests)
+composer test          # PHPUnit
 composer analyse       # PHPStan level 5
 ```
 
@@ -172,6 +117,16 @@ composer analyse       # PHPStan level 5
 `composer install` / `composer update` symlinks the repo's `pre-commit` script into `.git/hooks/pre-commit`; it is a thin shim over the shared hook of [`givanov95/laravel-git-hooks`](https://github.com/givanov95/laravel-git-hooks) and runs `composer test` + `composer analyse` before any commit that touches `.php` files.
 
 Bypass with `git commit --no-verify` when you genuinely need to (WIP commit, doc-only change you've already validated).
+
+## Upgrading from 1.x
+
+2.0 removes what no project used:
+
+- `Givanov95\LaravelTranslations\Models\Translation`, the `HasTranslation` trait and `Translator::mapModelTranslationKeys()` / `mapCollectionTranslationKeys()`;
+- `Services\MultiSelectService` and `Concerns\MultiSelectDataConversion` (they produced the retired `{ "Text": id }` payload; the standard is `{ value, label }`);
+- the package migration and the `translations-migrations` publish tag. `php artisan migrate` no longer creates a `translations` table.
+
+Nothing else changes: `Translator`, the two middlewares, the config and the Vue plugin are as before. If you did use one of the removed classes, copy it from the `v1.1.1` tag into your project. A `translations` table that earlier versions already created is left alone; drop it with a migration of your own if nothing uses it (`Schema::dropIfExists('translations')`).
 
 ## License
 
