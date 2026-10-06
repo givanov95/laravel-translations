@@ -16,6 +16,13 @@ class Translator
     /**
      * Load and cache the JSON translation file for the given locale (or current).
      *
+     * A locale without a file has no translations: the locale can come from a URL prefix or a
+     * cookie, and a value nobody has a file for must not turn a page into a 500. A file that is not
+     * valid JSON is still an error, that is a mistake in the project.
+     *
+     * The cache entry remembers which version of the file it was read from (modification time and
+     * size), so editing the file replaces it without anyone calling clearCache().
+     *
      * @return array<string, string>
      */
     public static function translations(?string $locale = null): array
@@ -23,19 +30,27 @@ class Translator
         $locale = $locale ?: App::getLocale();
         $path = self::langPath($locale);
 
-        return Cache::rememberForever(self::CACHE_KEY_PREFIX.$locale, function () use ($path, $locale) {
-            if (! File::exists($path)) {
-                throw new RuntimeException("Translation file not found for locale [{$locale}]: {$path}");
-            }
+        if (! File::exists($path)) {
+            return [];
+        }
 
-            $decoded = json_decode(File::get($path), true);
+        $version = File::lastModified($path).'-'.File::size($path);
+        $key = self::CACHE_KEY_PREFIX.$locale;
+        $cached = Cache::get($key);
 
-            if (! is_array($decoded)) {
-                throw new RuntimeException("Invalid JSON in translation file: {$path}");
-            }
+        if (is_array($cached) && ($cached['version'] ?? null) === $version && is_array($cached['translations'] ?? null)) {
+            return $cached['translations'];
+        }
 
-            return $decoded;
-        });
+        $decoded = json_decode(File::get($path), true);
+
+        if (! is_array($decoded)) {
+            throw new RuntimeException("Invalid JSON in translation file: {$path}");
+        }
+
+        Cache::forever($key, ['version' => $version, 'translations' => $decoded]);
+
+        return $decoded;
     }
 
     /**

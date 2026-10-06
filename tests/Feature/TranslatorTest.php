@@ -28,10 +28,39 @@ class TranslatorTest extends TestCase
         Translator::translations('en');
         $this->assertTrue(Cache::has('translations_en'));
 
-        // Mutating the file should NOT affect the second call because of cache.
-        file_put_contents("{$dir}/en.json", json_encode(['Save' => 'CHANGED']));
+        // Same size and same modification time: the file counts as unchanged, so the cache answers.
+        $mtime = filemtime("{$dir}/en.json");
+        file_put_contents("{$dir}/en.json", json_encode(['Save' => 'Zave']));
+        touch("{$dir}/en.json", $mtime);
 
         $this->assertSame(['Save' => 'Save'], Translator::translations('en'));
+    }
+
+    public function test_editing_a_file_is_picked_up_without_clearing_the_cache(): void
+    {
+        $dir = $this->withLangFile('en', ['Save' => 'Save']);
+        $mtime = filemtime("{$dir}/en.json");
+
+        $this->assertSame(['Save' => 'Save'], Translator::translations('en'));
+
+        // A later modification time is enough, even when the size stays the same.
+        file_put_contents("{$dir}/en.json", json_encode(['Save' => 'Zave']));
+        touch("{$dir}/en.json", $mtime + 10);
+
+        $this->assertSame(['Save' => 'Zave'], Translator::translations('en'));
+    }
+
+    public function test_a_different_size_is_picked_up_even_when_the_modification_time_is_the_same(): void
+    {
+        $dir = $this->withLangFile('en', ['Save' => 'Save']);
+        $mtime = filemtime("{$dir}/en.json");
+
+        Translator::translations('en');
+
+        file_put_contents("{$dir}/en.json", json_encode(['Save' => 'Save changed']));
+        touch("{$dir}/en.json", $mtime);
+
+        $this->assertSame(['Save' => 'Save changed'], Translator::translations('en'));
     }
 
     public function test_uses_app_locale_when_none_passed(): void
@@ -42,14 +71,23 @@ class TranslatorTest extends TestCase
         $this->assertSame(['Save' => 'Запис'], Translator::translations());
     }
 
-    public function test_throws_when_file_missing(): void
+    public function test_a_locale_without_a_file_has_no_translations(): void
     {
         $this->withLangFile('en', ['Save' => 'Save']);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Translation file not found for locale [xx]');
+        $this->assertSame([], Translator::translations('xx'));
+        $this->assertFalse(Cache::has('translations_xx'));
+    }
 
-        Translator::translations('xx');
+    public function test_a_file_that_is_not_json_is_still_an_error(): void
+    {
+        $dir = $this->withLangFile('en', []);
+        file_put_contents("{$dir}/en.json", '{ not json');
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Invalid JSON in translation file');
+
+        Translator::translations('en');
     }
 
     public function test_get_all_locales_lists_every_json_file(): void

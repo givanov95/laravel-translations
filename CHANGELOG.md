@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   you did use a removed class, copy it from the `v1.1.1` tag into your project. Drop the old table
   with a migration of your own if nothing uses it. See "Upgrading from 1.x" in the README.
 
+### Fixed
+- `Translator::translations()` returns `[]` for a locale without a `lang/{locale}.json` file instead
+  of throwing a `RuntimeException`, which turned a locale nobody has a file for (from a URL
+  prefix or a cookie) into a 500. A file that is not valid JSON still throws.
+- The cache is invalidated when the file changes: an entry remembers the modification time and size of
+  the file it was read from, and a changed file replaces it. Before, the entry lived forever until
+  `Translator::clearCache()` or a cache clear on deploy. `clearCache()` stays. Entries written by 1.x
+  have no version and are simply read again.
+
 ### Added
 - CI: PHPUnit and PHPStan on PHP 8.3 and 8.4 for every push to `main` and every pull request.
 
