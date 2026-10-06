@@ -1,6 +1,6 @@
 {
     "name": "givanov95/laravel-translations",
-    "description": "Multi-locale translation infrastructure for Laravel + Inertia + Vue projects: polymorphic Translation model, HasTranslation trait, JSON-backed Translator, locale middlewares, MultiSelect helpers.",
+    "description": "Multi-locale translation infrastructure for Laravel + Inertia + Vue projects: a cached JSON-backed Translator, locale middlewares and a Vue plugin.",
     "type": "library",
     "license": "MIT",
     "keywords": ["laravel", "translations", "i18n", "inertia", "vue", "multi-locale"],
@@ -8,7 +8,6 @@
         "php": "^8.3",
         "illuminate/contracts": "^11.0|^12.0|^13.0",
         "illuminate/support": "^11.0|^12.0|^13.0",
-        "illuminate/database": "^11.0|^12.0|^13.0",
         "illuminate/http": "^11.0|^12.0|^13.0",
         "illuminate/cache": "^11.0|^12.0|^13.0",
         "illuminate/filesystem": "^11.0|^12.0|^13.0"

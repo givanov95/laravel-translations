@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Givanov95\LaravelTranslations;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
@@ -65,31 +63,6 @@ class Translator
         foreach (self::getAllLocales() as $locale) {
             Cache::forget(self::CACHE_KEY_PREFIX.$locale);
         }
-    }
-
-    /**
-     * Rebuild the model's `translations` relation as a Collection keyed by
-     * translation `key` instead of sequential integers.
-     */
-    public static function mapModelTranslationKeys(Model $model): void
-    {
-        if (! $model->relationLoaded('translations')) {
-            return;
-        }
-
-        $mapped = new Collection();
-        /** @var iterable<Models\Translation> $translations */
-        $translations = $model->getRelation('translations');
-        foreach ($translations as $translation) {
-            $mapped->put($translation->key, $translation);
-        }
-
-        $model->setRelation('translations', $mapped);
-    }
-
-    public static function mapCollectionTranslationKeys(Collection $collection): Collection
-    {
-        return $collection->each(fn ($model) => self::mapModelTranslationKeys($model));
     }
 
     private static function langPath(string $locale): string
