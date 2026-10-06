@@ -163,9 +163,13 @@ composer test          # PHPUnit (16 tests)
 composer analyse       # PHPStan level 5
 ```
 
+### CI
+
+`.github/workflows/ci.yml` runs PHPUnit and PHPStan on PHP 8.3 and 8.4 for every push to `main` and every pull request (the shared `php-package` workflow from [`givanov95/ci-workflows`](https://github.com/givanov95/ci-workflows)). It uses the newest Laravel that `composer.json` allows; Laravel 11 and 12 are not tested separately.
+
 ### Pre-commit hook
 
-`composer install` / `composer update` symlinks the repo's `pre-commit` script into `.git/hooks/pre-commit`. It runs `composer test` + `composer analyse` before any commit that touches `.php` files — replacement for CI since the repo is private.
+`composer install` / `composer update` symlinks the repo's `pre-commit` script into `.git/hooks/pre-commit`; it is a thin shim over the shared hook of [`givanov95/laravel-git-hooks`](https://github.com/givanov95/laravel-git-hooks) and runs `composer test` + `composer analyse` before any commit that touches `.php` files.
 
 Bypass with `git commit --no-verify` when you genuinely need to (WIP commit, doc-only change you've already validated).
 

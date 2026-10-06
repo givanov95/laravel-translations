@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- CI: PHPUnit and PHPStan on PHP 8.3 and 8.4 for every push to `main` and every pull request.
 - Initial extraction from `laravel-starter`.
 - `Translation` polymorphic Eloquent model + migration with unique constraint on `(locale, translatable_type, translatable_id, key)`.
 - `HasTranslation` trait: `setTranslation()` (accepts string or `BackedEnum` locale), `loadTranslations()`, `withTranslations()` / `withTranslationsForLocale()` scopes. Staging is keyed by locale+key so calling `setTranslation('en','title')` followed by `setTranslation('bg','title')` correctly creates two rows.
