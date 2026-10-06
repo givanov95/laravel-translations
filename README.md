@@ -91,6 +91,19 @@ app.use(TranslationPlugin, translations);
 
 ## Usage
 
+### The translator
+
+```php
+use Givanov95\LaravelTranslations\Translator;
+
+Translator::translations();      // the current locale: the contents of lang/{locale}.json
+Translator::translations('bg');  // a given locale
+Translator::getAllLocales();     // every locale that has a lang/*.json file
+```
+
+- A locale without a `lang/{locale}.json` file has **no translations**: `translations()` returns `[]`. The locale can come from a URL prefix or a cookie, and a value nobody has a file for must not turn a page into a 500. A file that is not valid JSON is still an error (`RuntimeException`).
+- The result is cached per locale. The cache entry remembers the modification time and size of the file it came from, so editing `lang/{locale}.json` is picked up on the next call without any clearing. `Translator::clearCache()` is still there, for example after rewriting a file from code within the same second with the same size.
+
 ### In Vue templates
 
 ```vue
