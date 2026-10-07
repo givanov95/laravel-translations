@@ -99,10 +99,29 @@ use Givanov95\LaravelTranslations\Translator;
 Translator::translations();      // the current locale: the contents of lang/{locale}.json
 Translator::translations('bg');  // a given locale
 Translator::getAllLocales();     // every locale that has a lang/*.json file
+Translator::localeChain('bg-BG'); // ['bg-BG', 'bg', <app.fallback_locale>], see "Fallback chain"
 ```
 
 - A locale without a `lang/{locale}.json` file has **no translations**: `translations()` returns `[]`. The locale can come from a URL prefix or a cookie, and a value nobody has a file for must not turn a page into a 500. A file that is not valid JSON is still an error (`RuntimeException`).
 - The result is cached per locale. The cache entry remembers the modification time and size of the file it came from, so editing `lang/{locale}.json` is picked up on the next call without any clearing. `Translator::clearCache()` is still there, for example after rewriting a file from code within the same second with the same size.
+
+### Fallback chain (optional)
+
+Off by default. With `'fallback_chain' => true` in `config/translations.php` (publish it with `--tag=translations-config`), `Translator::translations('bg-BG')` merges the files of the locale's chain, the most generic first, so the requested locale wins:
+
+```
+lang/en-GB.json   (config('app.fallback_locale'))   ← lowest priority
+lang/bg.json      (the base language: the part before the first "-")
+lang/bg-BG.json                                      ← highest priority
+```
+
+A string missing from `bg-BG.json` then comes from `bg.json` or from the application's fallback locale instead of showing the bare key. Files that do not exist are skipped, so a project with only `bg-BG.json` and `en-GB.json` gets exactly "`bg-BG`, then `en-GB`". Things to know:
+
+- A locale with no file anywhere in its chain still has no translations (`[]`); a locale with no file of its own but a fallback file (`de-DE` with an `en-GB.json`) gets the fallback's strings.
+- Invalid JSON in **any** file of the chain is an error that names that file.
+- The cache entry follows every file of the chain (name, modification time, size), so editing a fallback file is picked up without clearing; changing `app.fallback_locale` is picked up too.
+- Keys are merged with `array_replace`, so integer-like keys (`"404"`) keep their value and are not renumbered.
+- `Translator::localeChain('bg-BG')` returns the chain (`['bg-BG', 'bg', 'en-GB']` when `app.fallback_locale` is `en-GB`) for code of your own that needs the same order, such as translated slugs.
 
 ### In Vue templates
 

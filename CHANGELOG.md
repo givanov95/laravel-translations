@@ -5,6 +5,16 @@ All notable changes to `givanov95/laravel-translations` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0]
+
+### Added
+- Optional locale fallback chain: `translations.fallback_chain` (default `false`, so nothing changes for
+  2.0 projects). When `true`, `Translator::translations('bg-BG')` merges `lang/bg-BG.json` over
+  `lang/bg.json` over `lang/<app.fallback_locale>.json`, so a string missing in a regional file comes from
+  the base language or the application fallback instead of showing the bare key. The cache entry follows
+  every file of the chain, and the files are merged with `array_replace`, so integer-like keys (`"404"`)
+  keep their value. New `Translator::localeChain()` returns the order.
+
 ## [2.0.0]
 
 ### Breaking
